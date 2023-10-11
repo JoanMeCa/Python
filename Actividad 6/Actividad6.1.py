@@ -1,0 +1,7 @@
+Nombre = input("Introduzca su nombre: ")
+Apellido1 = input("Introduzca su primer apellido: ")
+Apellido2 = input("Introduzca su segundo apellido: ")
+Grado = input("Introduzca su grado de estudios: ")
+Color = input("Introduzca su color favorito: ")
+Peli = input("Introduzca su película favorita: ")
+print("Usted es", Nombre, Apellido1, Apellido2, ", esta en", Grado, ", su color favorito es", Color, "y su película favorita es", Peli)
