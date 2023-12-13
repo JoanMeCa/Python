@@ -1,15 +1,13 @@
+from typing import Any
 import pygame
+from pygame.locals import QUIT, KEYUP, K_SPACE  
 
-class Cat:
-    def __init__(self):
-        self.posiz = 300
-        self.postop = 507
-
+class Cat(pygame.sprite.Sprite):
+    def __init__(self, posicion):
+        super().__init__()
         self.derecha = pygame.image.load("derecha.png")
         self.izquierda = pygame.image.load("izquierda.png")
-        
-        self.puede_disparar = True  # Nuevo atributo para controlar si puede disparar
-        
+
         scaled_width = 100
         scaled_height = 93
         self.derecha = pygame.transform.scale(self.derecha, (scaled_width, scaled_height))
@@ -19,24 +17,24 @@ class Cat:
         self.image_index = 0
         self.tiempo_anterior_imagen = 0  # Inicializar a 0
 
-    def mover(self, teclas):
+        self.image = self.images[self.image_index]
+        self.rect = self.image.get_rect()
+        self.rect.topleft = posicion
+        self.puede_disparar = True  # Nuevo atributo para controlar si puede disparar
+        
+    def update(self, teclas, tiempo_actual, cambio_imagen_tiempo, *args: Any, **kwargs: Any, ) -> None:
         pantalla = pygame.display.get_surface()
         limite = pantalla.get_width() - self.izquierda.get_width()
-        self.posiz = min(self.posiz, limite)
-        if teclas[pygame.K_a] and self.posiz > 0:
-            self.posiz -= 20
+        self.rect.x = min(self.rect.x, limite)
+        if teclas[pygame.K_a] and self.rect.x > 0:
+            self.rect.x -= 20
         if teclas[pygame.K_d]:
-            self.posiz = min(self.posiz + 20, limite)
-
-    def dibujar(self, pantalla=None):
-        if pantalla is None:
-            pantalla = pygame.display.get_surface()
-        pantalla.blit(self.images[self.image_index], (self.posiz, self.postop))
-
-    def cambiar_imagen(self, tiempo_actual, cambio_imagen_tiempo):
+            self.rect.x = min(self.rect.x + 20, limite)
         if tiempo_actual - self.tiempo_anterior_imagen >= cambio_imagen_tiempo:
             self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
             self.tiempo_anterior_imagen = tiempo_actual
+    
     def puede_disparar(self):
         return self.puede_disparar
 
@@ -86,7 +84,7 @@ class Proyectil(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
-        # Variables para el cambio de color constante
+        # Epilepsia colores
         self.colores = [
             (255, 0, 0),
             (255, 165, 0),
@@ -98,14 +96,14 @@ class Proyectil(pygame.sprite.Sprite):
         ]
         self.indice_color_actual = 0
 
-    def update(self):
-        # Actualizar la posición del proyectil hacia arriba
-        self.rect.y -= 5  # Puedes ajustar la velocidad cambiando este valor
+    def update(self,  *args, **kwargs):
+        
+        self.rect.y -= 15  # Velocidad proyectil
 
-        # Cambiar de color constantemente
+        # Epilepsia
         self.image.fill(self.colores[self.indice_color_actual])
         self.indice_color_actual = (self.indice_color_actual + 1) % len(self.colores)
 
-        # Eliminar el proyectil si sale de la pantalla
+        # Borrar al salir de la pantalla
         if self.rect.bottom < 0:
             self.kill()
