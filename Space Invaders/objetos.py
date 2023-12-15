@@ -1,6 +1,7 @@
 from typing import Any
 import pygame
-from pygame.locals import QUIT, KEYUP, K_SPACE  
+import pygame.mask
+from pygame.locals import QUIT, KEYUP, K_SPACE
 
 class Cat(pygame.sprite.Sprite):
     def __init__(self, posicion):
@@ -107,3 +108,66 @@ class Proyectil(pygame.sprite.Sprite):
         # Borrar al salir de la pantalla
         if self.rect.bottom < 0:
             self.kill()
+class Enemigo(pygame.sprite.Sprite):
+    def __init__(self, posicion) -> None:
+        super().__init__()
+        
+        # Cargar las imagenes
+        self.enemigo_derecha = pygame.image.load("enemigoderecha.png")
+        self.enemigo_izquierda = pygame.image.load("enemigoizquierda.png")
+        
+        #Escalado
+        
+        scaled_width = 200
+        scaled_height = 100
+        self.enemigo_derecha = pygame.transform.scale(self.enemigo_derecha, (scaled_width, scaled_height))
+        self.enemigo_izquierda = pygame.transform.scale(self.enemigo_izquierda, (scaled_width, scaled_height))
+
+        #El propio sprite del enemigo
+        
+        self.image = self.enemigo_izquierda
+        self.rect = self.image.get_rect()
+        self.rect.topleft = posicion
+
+        #Cosas
+        
+        self.velocidad = 5  # Speed
+        self.direccion = 1  # 1 para derecha, -1 para izquierda
+        self.descenso = 100  # Cuantos pixeles baja cada vez que choca con la pared
+        
+        # Crear máscara de colisión para el enemigo
+        self.mask = pygame.mask.from_surface(self.image)
+        
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        pantalla = pygame.display.get_surface()
+        limite_izquierdo = -70
+        limite_derecho = pantalla.get_width()
+
+        if self.direccion == 1:  # Mover hacia la derecha
+            self.image = self.enemigo_derecha
+            self.rect.x += self.velocidad
+            if self.rect.x >= limite_derecho:
+                self.rect.x = limite_derecho
+                self.direccion = -1  # Cambiar dirección hacia la izquierda
+                self.rect.y += self.descenso
+        elif self.direccion == -1:  # Mover hacia la izquierda
+            self.image = self.enemigo_izquierda
+            self.rect.x -= self.velocidad
+            if self.rect.x <= limite_izquierdo:
+                self.rect.x = limite_izquierdo
+                self.direccion = 1  # Cambiar dirección hacia la derecha
+                self.rect.y += self.descenso
+
+        # Colisión con proyectiles
+        for proyectil in kwargs.get('proyectiles', []):
+            # Crear máscara de colisión para el proyectil
+            proyectil_mask = pygame.mask.from_surface(proyectil.image)
+
+            # Obtener la posición relativa del proyectil con respecto al enemigo
+            offset = (proyectil.rect.x - self.rect.x, proyectil.rect.y - self.rect.y)
+
+            # Verificar la superposición de las máscaras
+            if self.mask.overlap(proyectil_mask, offset):
+                proyectil.kill()
+                self.kill()
+                break  # Salir del bucle al encontrar la primera colisión

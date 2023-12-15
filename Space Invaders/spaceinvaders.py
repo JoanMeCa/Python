@@ -1,5 +1,5 @@
 import pygame
-from objetos import Cat, Background, Proyectil
+from objetos import Cat, Background, Proyectil, Enemigo
 
 #Game ON
 
@@ -22,10 +22,12 @@ tiempo_anterior_imagen = pygame.time.get_ticks() #Cosas de frames
 image_index = 0 #Mas cosas de frames
 clock = pygame.time.Clock() #Reloj, xd
 FPS = 30 #Frames por segundo (No cambiar, juego diseñado a 30 FPS)
+contador_frames = 0 #Contador de frames para enemigos
+frames_enemigo = 15 #Cada cuantos frames aparece un enemigo   
 
 #Clases Importadas
 
-cat = Cat((450,505))
+cat = Cat((450,505)) #Posicion Inical Jugador
 background = Background(velocidad_fondo)
 
 # Sprites
@@ -41,31 +43,43 @@ while not salir:
     pantalla.fill((0,0,0))
     background.actualizar()
     background.dibujar(pantalla)
+    
     # El juego
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             salir = True
         elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
-            cat.activar_disparo()  # Activar el disparo cuando se pulsa la barra espaciadora
+            cat.activar_disparo()  # Activar el disparo cuando se suelta la barra espaciadora
 
-    #Movimiento        
+    #Controles     
             
     teclas = pygame.key.get_pressed()
+    if teclas[pygame.K_SPACE] and cat.puede_disparar:
+        proyectil = Proyectil(cat.rect.x + cat.derecha.get_width() // 2, cat.rect.y)
+        todos_los_sprites.add(proyectil)
+        proyectiles.add(proyectil)
+        cat.desactivar_disparo()
 
     #Tiempo
 
     tiempo_actual = pygame.time.get_ticks()
     
-    # Crear un proyectil cuando se pulsa la tecla de espacio
-    if teclas[pygame.K_SPACE] and cat.puede_disparar:
-        proyectil = Proyectil(cat.rect.x + cat.derecha.get_width() // 2, cat.rect.y)
-        todos_los_sprites.add(proyectil)
-        proyectiles.add(proyectil)
-        cat.desactivar_disparo()  # Desactivar el disparo cuando se presiona la barra espaciadora
-
-    todos_los_sprites.update(teclas, tiempo_actual, cambio_imagen_tiempo)
+    #Actualizar los sprites
+    
+    todos_los_sprites.update(teclas, tiempo_actual, cambio_imagen_tiempo, proyectiles=proyectiles)
     todos_los_sprites.draw(pantalla)
+    
+    #Spawneo Enemigos
+    
+    contador_frames += 1
+    if contador_frames >= frames_enemigo:
+        contador_frames = 0
+        nuevo_enemigo = Enemigo((1000, -100))  # Posición inicial del nuevo enemigo
+        todos_los_sprites.add(nuevo_enemigo)
+
+        
+    
     # No idea really
 
     pygame.display.flip()
