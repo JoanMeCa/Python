@@ -1,5 +1,5 @@
 import pygame
-from objetos import Cat, Background, Proyectil, Enemigo
+from objetos import Cat, Background, Enemigo
 
 #Game ON
 
@@ -33,7 +33,7 @@ background = Background(velocidad_fondo)
 # Sprites
 
 todos_los_sprites = pygame.sprite.Group()
-proyectiles = pygame.sprite.Group()
+proyectiles = pygame.sprite.Group() #Más que los proyectiles, aquí está la mascara de colisión de los mismos
 todos_los_sprites.add(cat)
 
 #Juego
@@ -41,8 +41,9 @@ todos_los_sprites.add(cat)
 salir = False
 while not salir:
     pantalla.fill((0,0,0))
-    background.actualizar()
-    background.dibujar(pantalla)
+    background.update()
+    background.draw(pantalla)
+    teclas = pygame.key.get_pressed()
     
     # El juego
     
@@ -52,14 +53,9 @@ while not salir:
         elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
             cat.activar_disparo()  # Activar el disparo cuando se suelta la barra espaciadora
 
-    #Controles     
-            
-    teclas = pygame.key.get_pressed()
-    if teclas[pygame.K_SPACE] and cat.puede_disparar:
-        proyectil = Proyectil(cat.rect.x + cat.derecha.get_width() // 2, cat.rect.y)
-        todos_los_sprites.add(proyectil)
-        proyectiles.add(proyectil)
-        cat.desactivar_disparo()
+    #Controles
+    
+    cat.disparar(teclas, proyectiles, todos_los_sprites)
 
     #Tiempo
 
@@ -75,6 +71,8 @@ while not salir:
     contador_frames += 1
     if contador_frames >= frames_enemigo:
         contador_frames = 0
+        nuevo_enemigo = Enemigo ((-200, 0))  # Posición inicial del nuevo enemigo
+        todos_los_sprites.add(nuevo_enemigo)
         nuevo_enemigo = Enemigo((1000, -100))  # Posición inicial del nuevo enemigo
         todos_los_sprites.add(nuevo_enemigo)
 

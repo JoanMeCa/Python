@@ -35,7 +35,15 @@ class Cat(pygame.sprite.Sprite):
             self.image_index = (self.image_index + 1) % len(self.images)
             self.image = self.images[self.image_index]
             self.tiempo_anterior_imagen = tiempo_actual
+            
+    # A partir de aqui codigo para disparar
     
+    def disparar(self, teclas, proyectiles, todos_los_sprites):
+        if teclas[pygame.K_SPACE] and self.puede_disparar:
+            proyectil = Proyectil(self.rect.x + self.derecha.get_width() // 2, self.rect.y)
+            todos_los_sprites.add(proyectil)
+            proyectiles.add(proyectil)
+            self.desactivar_disparo()
     def puede_disparar(self):
         return self.puede_disparar
 
@@ -44,8 +52,10 @@ class Cat(pygame.sprite.Sprite):
 
     def activar_disparo(self):
         self.puede_disparar = True
-class Background:
+class Background(pygame.sprite.Sprite):  # PUTOS SPRITES (Nota del dia siguiente: Efectivamente hermano)
     def __init__(self, velocidad, num_imagenes=3):
+        super().__init__()
+
         self.imagenes = [pygame.image.load(f"background{i}.jpg") for i in range(1, num_imagenes + 1)]
         self.velocidad = velocidad
         self.num_imagenes = num_imagenes
@@ -57,27 +67,42 @@ class Background:
         self.alto_pantalla = pantalla_info.current_h
         self.imagenes = [pygame.transform.scale(imagen, (self.ancho_pantalla, self.alto_pantalla)) for imagen in self.imagenes]
 
-        self.pos_y = 0  # Posición inicial en el eje Y
+        self.sprite1 = pygame.sprite.Sprite()
+        self.sprite1.image = self.imagenes[(self.imagen_actual + 0)]
+        self.sprite1.rect = self.sprite1.image.get_rect()
+        self.sprite1.rect.y = 0 
 
-    def actualizar(self):
-        # Actualizar la posición vertical del fondo hacia abajo
-        self.pos_y += self.velocidad
+        self.sprite2 = pygame.sprite.Sprite()
+        self.sprite2.image = self.imagenes[(self.imagen_actual + 1)]
+        self.sprite2.rect = self.sprite2.image.get_rect()
+        self.sprite2.rect.y = -self.alto_pantalla 
 
-        # Si la imagen actual ha pasado completamente fuera de la pantalla hacia abajo, reiniciar la posición y cambiar la imagen
-        if self.pos_y >= self.alto_pantalla:
-            self.pos_y = 0
-            self.imagen_actual = (self.imagen_actual + 1) % self.num_imagenes
+        self.sprite3 = pygame.sprite.Sprite()
+        self.sprite3.image = self.imagenes[(self.imagen_actual + 2)]
+        self.sprite3.rect = self.sprite3.image.get_rect()  
+        self.sprite3.rect.y = -2*self.alto_pantalla 
 
-    def dibujar(self, pantalla=None):
-        if pantalla is None:
-            pantalla = pygame.display.get_surface()
+    def update(self):
+        # Actualizar la posición vertical de ambos sprites hacia abajo
+        self.sprite1.rect.y += self.velocidad
+        self.sprite2.rect.y += self.velocidad
+        self.sprite3.rect.y += self.velocidad
 
-        # Dibujar el fondo en dos posiciones para el desplazamiento continuo
-        pantalla.blit(self.imagenes[self.imagen_actual], (0, self.pos_y))
+        # Para que funcione, en caso de añadir imagenes, se ha de multiplicar -self.alto_pantalla por el numero de imagenes - 1
 
-        # Si la imagen se ha desplazado lo suficiente, dibujar la siguiente imagen hacia abajo
-        siguiente_imagen = (self.imagen_actual + 1) % self.num_imagenes
-        pantalla.blit(self.imagenes[siguiente_imagen], (0, self.pos_y - self.alto_pantalla))
+        if self.sprite1.rect.y >= self.alto_pantalla:
+            self.sprite1.rect.y = -2*self.alto_pantalla 
+
+        if self.sprite2.rect.y >= self.alto_pantalla:
+            self.sprite2.rect.y = -2*self.alto_pantalla
+            
+        if self.sprite3.rect.y >= self.alto_pantalla:
+            self.sprite3.rect.y = -2*self.alto_pantalla
+
+    def draw(self, screen):
+        screen.blit(self.sprite1.image, self.sprite1.rect)
+        screen.blit(self.sprite2.image, self.sprite2.rect)
+        screen.blit(self.sprite3.image, self.sprite3.rect)
 class Proyectil(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -140,7 +165,7 @@ class Enemigo(pygame.sprite.Sprite):
         
     def update(self, *args: Any, **kwargs: Any) -> None:
         pantalla = pygame.display.get_surface()
-        limite_izquierdo = -70
+        limite_izquierdo = -200
         limite_derecho = pantalla.get_width()
 
         if self.direccion == 1:  # Mover hacia la derecha
