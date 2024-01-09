@@ -23,7 +23,7 @@ class Cat(pygame.sprite.Sprite):
         self.rect.topleft = posicion
         self.puede_disparar = True  # Nuevo atributo para controlar si puede disparar
         
-    def update(self, teclas, tiempo_actual, cambio_imagen_tiempo, *args: Any, **kwargs: Any, ) -> None:
+    def update(self, teclas, tiempo_actual, cambio_imagen_tiempo, enemigos, *args: Any, **kwargs: Any, ) -> None:
         pantalla = pygame.display.get_surface()
         limite = pantalla.get_width() - self.izquierda.get_width()
         self.rect.x = min(self.rect.x, limite)
@@ -35,6 +35,11 @@ class Cat(pygame.sprite.Sprite):
             self.image_index = (self.image_index + 1) % len(self.images)
             self.image = self.images[self.image_index]
             self.tiempo_anterior_imagen = tiempo_actual
+        colision = pygame.sprite.spritecollideany(self, enemigos, pygame.sprite.collide_mask)
+        if colision:
+            # Eliminar tanto al gato como al enemigo en caso de colisión
+            colision.kill()
+            self.kill()
             
     # A partir de aqui codigo para disparar
     
@@ -52,7 +57,7 @@ class Cat(pygame.sprite.Sprite):
 
     def activar_disparo(self):
         self.puede_disparar = True
-class Background(pygame.sprite.Sprite):  # PUTOS SPRITES (Nota del dia siguiente: Efectivamente hermano)
+class Background(pygame.sprite.Sprite):  # PUTOS SPRITES (Nota del dia siguiente: Efectivamente hermano) Ni me acuerdo de por que
     def __init__(self, velocidad, num_imagenes=3):
         super().__init__()
 
@@ -156,7 +161,7 @@ class Enemigo(pygame.sprite.Sprite):
 
         #Cosas
         
-        self.velocidad = 5  # Speed
+        self.velocidad = 15  # Speed
         self.direccion = 1  # 1 para derecha, -1 para izquierda
         self.descenso = 100  # Cuantos pixeles baja cada vez que choca con la pared
         
