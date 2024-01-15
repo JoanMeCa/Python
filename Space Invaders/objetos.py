@@ -139,7 +139,7 @@ class Proyectil(pygame.sprite.Sprite):
         if self.rect.bottom < 0:
             self.kill()
 class Enemigo(pygame.sprite.Sprite):
-    def __init__(self, posicion) -> None:
+    def __init__(self, posicion, velocidad) -> None:
         super().__init__()
         
         # Cargar las imagenes
@@ -161,7 +161,7 @@ class Enemigo(pygame.sprite.Sprite):
 
         #Cosas
         
-        self.velocidad = 15  # Speed
+        self.velocidad = velocidad  # Speed
         self.direccion = 1  # 1 para derecha, -1 para izquierda
         self.descenso = 100  # Cuantos pixeles baja cada vez que choca con la pared
         
