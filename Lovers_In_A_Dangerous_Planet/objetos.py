@@ -1,6 +1,7 @@
 import pygame
 from pygame.sprite import Sprite
 import math
+import random
 
 class Planeta(Sprite):
     def __init__(self):
@@ -11,7 +12,8 @@ class Planeta(Sprite):
         self.original_image = pygame.image.load("planet_250.png")
 
         # Escalar la imagen a la mitad
-        self.image = pygame.transform.scale(self.original_image, (250,250))
+        self.original_image = pygame.transform.scale(self.original_image, (125,125))
+        self.image = self.original_image.copy()
 
         # Obtener el rectángulo de la imagen
         self.rect = self.image.get_rect()
@@ -48,7 +50,7 @@ class Planeta(Sprite):
             self.rotar_derecha()
 
 class Torreta(Sprite):
-    def __init__(self, planeta, angulo_inicial, todos_los_sprites):
+    def __init__(self, planeta, angulo_inicial, todos_los_proyectiles):
         super().__init__()
 
         # Cargar la imagen original de la torreta
@@ -66,7 +68,7 @@ class Torreta(Sprite):
         self.posicionar_en_borde_planeta(planeta)
         self.distancia_al_centro = max(planeta.rect.width, planeta.rect.height) // 2
         self.planeta = planeta
-        self.todos_los_sprites = todos_los_sprites
+        self.todos_los_proyectiles = todos_los_proyectiles
         self.tiempo_ultimo_disparo = 0
         self.intervalo_disparo = 500
 
@@ -81,7 +83,8 @@ class Torreta(Sprite):
 
     def rotar_imagen(self):
         # Rotar la imagen según el ángulo de rotación actual
-        self.image = pygame.transform.rotate(pygame.image.load("turret.png"), self.angulo_rotacion_actual)
+        self.image = pygame.transform.scale(pygame.image.load("turret.png"), (80,60))
+        self.image = pygame.transform.rotate(self.image, self.angulo_rotacion_actual)
         self.rect = self.image.get_rect(center=self.rect.center)
     def disparar(self):
         tiempo_actual = pygame.time.get_ticks()
@@ -92,7 +95,7 @@ class Torreta(Sprite):
             proyectil = Proyectil(self.rect.centerx, self.rect.centery, self.angulo_rotacion_actual)
 
             # Agregar el proyectil al grupo de sprites
-            self.todos_los_sprites.add(proyectil)
+            self.todos_los_proyectiles.add(proyectil)
 
             # Actualizar el tiempo del último disparo
             self.tiempo_ultimo_disparo = tiempo_actual
@@ -133,16 +136,75 @@ class Proyectil(Sprite):
 
         # Inicializar la imagen rotada
         self.rotar_imagen()
+        self.mask = pygame.mask.from_surface(self.image)
 
     def rotar_imagen(self):
         # Rotar la imagen según el ángulo de rotación actual
-        self.image = pygame.transform.rotate(self.original_image, self.angulo_torreta + 180)
+        self.image = pygame.transform.scale(self.original_image, ((59,35)))
+        self.image = pygame.transform.rotate(self.image, self.angulo_torreta + 180)
         self.rect = self.image.get_rect(center=self.rect.center)
+        
+    def outofbounds(self):
+        # Verifica si el proyectil está completamente fuera de la pantalla
+        if not pygame.display.get_surface().get_rect().colliderect(self.rect):
+            self.kill()  # Eliminar el proyectil si está fuera de la pantalla
+            return True
+        return False
 
     def update(self):
-        # Mover el proyectil en la dirección del ángulo
         self.rect.x += self.velocidad_x
         self.rect.y += self.velocidad_y
-
-        # Rotar la imagen durante la actualización
         self.rotar_imagen()
+        
+        if self.outofbounds():
+            return
+class Meteorito(Sprite):
+    def __init__(self, planeta):
+        super().__init__()
+
+        # Cargar la imagen original del meteorito
+        self.image = pygame.image.load("piedra.png")
+        self.image = pygame.transform.scale(pygame.image.load("piedra.png"), (120,120))
+
+        # Obtener el rectángulo de la imagen
+        self.rect = self.image.get_rect()
+
+        # Establecer la posición inicial fuera de la pantalla en un círculo alrededor del centro del planeta
+        self.spawn_fuera_pantalla(planeta)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.angulo_rotacion_actual = (0)
+        self.rotar_imagen()
+
+    def spawn_fuera_pantalla(self, planeta):
+        # Definir el radio del círculo invisible alrededor del centro del planeta
+        radio_circulo = 800
+
+        # Generar un ángulo aleatorio en radianes
+        angulo_rad = random.uniform(0, 2 * math.pi)
+
+        # Calcular las coordenadas del punto fuera de la pantalla en el círculo
+        x_fuera_pantalla = planeta.rect.centerx + int(radio_circulo * math.cos(angulo_rad))
+        y_fuera_pantalla = planeta.rect.centery - int(radio_circulo * math.sin(angulo_rad))
+
+        # Establecer la posición inicial del meteorito
+        self.rect.center = (x_fuera_pantalla, y_fuera_pantalla)
+        
+    def rotar_imagen(self):
+            # Rotar la imagen según el ángulo de rotación actual
+            self.image = pygame.transform.rotate(self.image, self.angulo_rotacion_actual)
+            self.rect = self.image.get_rect(center=self.rect.center)
+
+    def update(self, planeta, velocidad_meteoritos):
+        # Obtener la dirección hacia el centro del planeta
+        direccion_x = planeta.rect.centerx - self.rect.centerx
+        direccion_y = planeta.rect.centery - self.rect.centery
+
+        # Normalizar la dirección para mantener una velocidad constante
+        magnitud = math.sqrt(direccion_x ** 2 + direccion_y ** 2)
+        if magnitud != 0:
+            direccion_x /= magnitud
+            direccion_y /= magnitud
+
+        # Mover el meteorito hacia el centro del planeta
+        self.rect.x += int(velocidad_meteoritos * direccion_x)
+        self.rect.y += int(velocidad_meteoritos * direccion_y)
