@@ -28,9 +28,15 @@ def set_difficulty(value, difficulty):
     nivel_dificultad = difficulty
     pass
 
-def start_the_game():
+def reiniciar_juego():
     global jugar, nivel_dificultad
     planet.puntos_de_vida = 3
+    todos_los_proyectiles.empty()
+    meteoritos.empty()
+
+def start_the_game():
+    global jugar, nivel_dificultad
+    reiniciar_juego()
     velocidad_meteoritos = 2
     tiempo_transcurrido = 0
     intervalo_meteorito = 1000  # 1000 milisegundos = 1 segundo
@@ -48,10 +54,11 @@ def start_the_game():
         planet.kill()
         todos_los_sprites.add(turret_North, turret_South, turret_East, turret_West, planet)
         turret_North.intervalo_disparo = 500
+        intervalo_meteorito = 800
     
     if nivel_dificultad == 2:
         # Ajusta la velocidad de rotación del planeta
-        planet.angulo = 1
+        planet.angulo = 1.5
         turret_North.kill()
         turret_South.kill()
         turret_East.kill()
@@ -59,6 +66,7 @@ def start_the_game():
         planet.kill()
         todos_los_sprites.add(turret_North, planet)
         turret_North.intervalo_disparo = 300
+        intervalo_meteorito = 1000
     
     #Juego
     
@@ -76,13 +84,6 @@ def start_the_game():
             meteorito = Meteorito(planet)
             meteoritos.add(meteorito)
             tiempo_transcurrido = 0
-            
-        # Actualizar el intervalo de generación de meteoritos cada 15 segundos
-        tiempo_actual = pygame.time.get_ticks()  # Nuevo: obtén el tiempo actual
-        if tiempo_actual - tiempo_ultima_actualizacion >= 15000:  # Ha pasado al menos 15 segundos
-            tiempo_ultima_actualizacion = tiempo_actual  # Actualiza el tiempo de la última actualización
-            if intervalo_meteorito > 100:  # Asegurarse de que el intervalo no sea menor que 100
-                intervalo_meteorito -= 100
         if nivel_dificultad == 1:
             if teclas_presionadas[pygame.K_SPACE]:
                 turret_North.disparar()
@@ -127,14 +128,11 @@ def start_the_game():
         pantalla.blit(texto_vida, (20, 20))
         
         pygame.display.flip()
-
-    
     pass
     
     
 # Crear menú
-menu = pygame_menu.Menu('Welcome', 400, 300, theme=pygame_menu.themes.THEME_BLUE)
-
+menu = pygame_menu.Menu('Planet Defender', 400, 300, theme=pygame_menu.themes.THEME_BLUE)
 menu.add.selector('Dificultad :', [('Normal', 1), ('Díficil', 2)], onchange=set_difficulty)
 menu.add.button('Jugar', start_the_game)
 menu.add.button('Salir', pygame_menu.events.EXIT)
@@ -151,4 +149,4 @@ while True:
     menu.mainloop(surface=pantalla)
 
     # Actualizar la pantalla
-    pygame.display.flip()
+    pygame.display.flip() 
