@@ -66,7 +66,7 @@ def start_the_game():
         planet.kill()
         todos_los_sprites.add(turret_North, planet)
         turret_North.intervalo_disparo = 300
-        intervalo_meteorito = 1000
+        intervalo_meteorito = 1500
     
     #Juego
     
